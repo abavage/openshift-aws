@@ -96,6 +96,26 @@ If the keys match, AWS issues temporary credentials to your OpenShift Pod.
 If the the S3 bucket or the CloudFront distribution is deleted, the cluster will immediately "lose its connectivity / authority." Operators will no longer be able to create Load Balancers, manage EBS volumes, or update DNS because AWS can no longer verify who the cluster is.
 
 
+![oidc-sts](./images/oidc-sts.png)
+
+`Phase 1`: The Request (A & B)
+(A) Pod Sends JWT: A cluster component (like the Ingress Operator) wants to create an AWS Load Balancer. It sends a ServiceAccount Token (a JSON Web Token or JWT) signed by the cluster’s internal private key to AWS STS.
+
+(B) STS Retrieves Issuer URL: AWS STS receives the token. It looks at the IAM OIDC Identity Provider configuration in your AWS account to find the "Issuer URL" associated with that specific cluster.
+
+`Phase 2`: The Validation (C, D, & E)
+(C) STS Makes HTTPS Request: AWS STS needs to verify that the token is authentic. It makes a secure HTTPS call to the CloudFront URL (the Issuer URL) to find the cluster's public keys.
+
+(D) S3 Serves the Public Keys: CloudFront uses Origin Access Control (OAC) to securely pull the openid-configuration and keys.json (JWKS) files from your Private S3 Bucket. These files contain the public part of the key pair used by your OpenShift cluster.
+
+(E) STS Verifies the Signature: AWS STS uses the public keys it just downloaded to verify the digital signature on the Pod's JWT. If the signature matches, STS knows the request is legitimately coming from your cluster.
+
+`Phase 3`: The Authorization (F & G)
+(F) Temporary IAM Credentials: Once verified, STS generates Short-lived IAM Credentials (Access Key, Secret Key, and Session Token) tied to the specific IAM Role defined for that operator.
+
+(G) Authentication Flow Complete: The Pod receives these temporary credentials and uses them to call the AWS Service API (e.g., EC2, EBS, or Route 53) to complete its work.
+
+
 ### Bastion Host
 * If the cluster is External a laptop or ec2 instance will be sufficient to deploy the cluster
 * If the cluster is Internal an ec2 instance in the VPC is needed or a device internally connected to the vpc.
