@@ -54,10 +54,12 @@ A single Route53 hosted zone is required to act as the base domain for the clust
 
 In an OpenShift STS (Security Token Service) architecture, the S3 bucket and CloudFront distribution serve a single, critical purpose: they host the "Identity Proof" that AWS needs to trust your cluster.
 
-This setup is required because of how IAM Roles for Service Accounts (IRSA) works. Here is the breakdown of why these components are non-negotiable.
+This setup is required because of how IAM Roles for Service Accounts (IRSA) works. 
+**`These components are non-negotiable`**.
 
-The Core Problem: Identity 
-When an OpenShift operator (like the Ingress Controller) wants to talk to AWS, it presents a ServiceAccount Token (a JWT).
+The Core Problem - Identity 
+When an OpenShift operator (like the Ingress Controller) wants to communicate to the underlying AWS infrastructure, it presents a ServiceAccount Token (a JWT).
+
 AWS STS receives this token and asks: "I see this token was signed by 'Cluster-X'. How do I know Cluster-X is legitimate, and where are its public keys so I can verify this signature?"
 AWS needs a Public URL (the OIDC Discovery Endpoint) to download two specific files:
 
@@ -65,12 +67,13 @@ AWS needs a Public URL (the OIDC Discovery Endpoint) to download two specific fi
 keys.json (JWKS): The public keys used to verify the cluster's tokens.
 
 S3 Bucket?
-The S3 bucket acts as the storage web server for those two files.
-When you run ccoctl, it generates a unique RSA key pair for your cluster.
+The S3 bucket acts as the storage web server for the two files.
+When ccoctl is executed, it generates a unique RSA key pair for your cluster.
+
 The Private Key stays inside the cluster (to sign tokens).
 The Public Key is uploaded to this S3 bucket so the rest of the world (specifically AWS IAM) can see it.
 
-CloudFront Origin?
+CloudFront Origin
 Two choices are avilable for how AWS reaches that S3 bucket, and CloudFront is the "Enterprise/Security" choice:
 
 `Option A (Public S3)`: Make the S3 bucket public. Anyone with the URL can see your cluster's public keys. Many corporate security policies strictly forbid public S3 buckets.
