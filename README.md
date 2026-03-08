@@ -66,14 +66,14 @@ AWS needs a Public URL (the OIDC Discovery Endpoint) to download two specific fi
 `openid-configuration`: A JSON file telling AWS where the keys are.
 keys.json (JWKS): The public keys used to verify the cluster's tokens.
 
-S3 Bucket?
 The S3 bucket acts as the storage web server for the two files.
 When ccoctl is executed, it generates a unique RSA key pair for your cluster.
 
 The Private Key stays inside the cluster (to sign tokens).
 The Public Key is uploaded to this S3 bucket so the rest of the world (specifically AWS IAM) can see it.
 
-CloudFront Origin
+CloudFront Origin:
+
 Two choices are avilable for how AWS reaches that S3 bucket, and CloudFront is the "Enterprise/Security" choice:
 
 `Option A (Public S3)`: Make the S3 bucket public. Anyone with the URL can see your cluster's public keys. Many corporate security policies strictly forbid public S3 buckets.
