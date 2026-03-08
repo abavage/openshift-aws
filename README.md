@@ -50,6 +50,49 @@ A single Route53 hosted zone is required to act as the base domain for the clust
 * Public: Needs to be a valid IANA registered domain or a delegated subdomian.
 * Private: Only accessable to the VPC and componenets within the vpc.
 
+### OIDC and STS
+
+In an OpenShift STS (Security Token Service) architecture, the S3 bucket and CloudFront distribution serve a single, critical purpose: they host the "Identity Proof" that AWS needs to trust your cluster.
+
+This setup is required because of how IAM Roles for Service Accounts (IRSA) works. Here is the breakdown of why these components are non-negotiable.
+
+The Core Problem: Identity 
+When an OpenShift operator (like the Ingress Controller) wants to talk to AWS, it presents a ServiceAccount Token (a JWT).
+AWS STS receives this token and asks: "I see this token was signed by 'Cluster-X'. How do I know Cluster-X is legitimate, and where are its public keys so I can verify this signature?"
+AWS needs a Public URL (the OIDC Discovery Endpoint) to download two specific files:
+
+`openid-configuration`: A JSON file telling AWS where the keys are.
+keys.json (JWKS): The public keys used to verify the cluster's tokens.
+
+S3 Bucket?
+The S3 bucket acts as the storage web server for those two files.
+When you run ccoctl, it generates a unique RSA key pair for your cluster.
+The Private Key stays inside the cluster (to sign tokens).
+The Public Key is uploaded to this S3 bucket so the rest of the world (specifically AWS IAM) can see it.
+
+CloudFront Origin?
+Two choices are avilable for how AWS reaches that S3 bucket, and CloudFront is the "Enterprise/Security" choice:
+
+`Option A (Public S3)`: Make the S3 bucket public. Anyone with the URL can see your cluster's public keys. Many corporate security policies strictly forbid public S3 buckets.
+
+`Option B (CloudFront + Private S3)`: Keep the S3 bucket private. Then use CloudFront as a gateway.
+
+CloudFront uses an Origin Access Control (OAC) or Identity (OAI) to "reach into" the private bucket.
+
+AWS IAM then talks to the CloudFront URL to get the keys.
+
+This satisfies security audits because no S3 bucket is set to "Public."
+
+The "Chain of Trust"
+The Cluster signs a request with its Private Key.
+AWS STS receives the request and looks at the IAM OIDC Identity Provider you created.
+The Identity Provider points to your CloudFront URL.
+AWS fetches the Public Key from S3 (via CloudFront).
+If the keys match, AWS issues temporary credentials to your OpenShift Pod.
+
+If the the S3 bucket or the CloudFront distribution is deleted, the cluster will immediately "lose its connectivity / authority." Operators will no longer be able to create Load Balancers, manage EBS volumes, or update DNS because AWS can no longer verify who the cluster is.
+
+
 ### Bastion Host
 * If the cluster is External a laptop or ec2 instance will be sufficient to deploy the cluster
 * If the cluster is Internal an ec2 instance in the VPC is needed or a device internally connected to the vpc.
