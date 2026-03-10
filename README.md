@@ -17,18 +17,17 @@
 [1] - The version of `openshift-install` will dictate the version of OpenShift installed on the cluster. `install-config.yaml` does not expose a version for installation. 
 
 ## Installation Pre Requisite
-
-`openshift-install` can either install the cluster as a IPI or UPI cluster. Either let the installer create all the vpc components or build them in advance. `It's strongly recommended to build all componenets in advance (UPI)` then the cluster and vpc componenets are two (2) completly different entities.
+The openshift-install tool supports both Installer-Provisioned Infrastructure (IPI) and User-Provisioned Infrastructure (UPI). While the installer can automate VPC creation, it is strongly recommended to provision all network components in advance (UPI). This approach ensures that the cluster and VPC remain two distinct architectural entities, offering better isolation and control.
 
 * IPI (installer provisioned infrastructure) where the installer configures all the vpc componenets (vpc, subnets, igw, routes, etc). The installer treats the cluster and vpc as a single entity. eg when the cluster is destroyed all vpc components are destroyed.
 * UPI (user provisioned infrastructure). The vpc and accociated componets are already provisioned in advance.
 
 ### Cluster 
-Clusters can eithe be installed as External or Internal facing.
-* External - API and Ingress are exposed to the internet via internet facing NLB's.
-* Internal - API and Ingress are only accessable to internal clients via internal facing NLB's.
+Clusters can be deployed with either External or Internal network exposure.
+* External: The API and Ingress controllers are exposed to the internet via public-facing Network Load Balancers (NLBs).
+* Internal: The API and Ingress controllers are restricted to internal clients via private NLBs.
 
-All nodes are installed in private subnets and accessed via NLB's, API and ingress. NLB's are either configured in public subnets, if clusters are external facing or private subnets if clusters are internally facing. 
+Regardless of the exposure type, all nodes reside in private subnets. Access is managed through NLBs, which are provisioned in public subnets for external clusters or private subnets for internal clusters.
 
 
 ### VPC Requirments
@@ -126,7 +125,9 @@ If the the S3 bucket or the CloudFront distribution is deleted, the cluster will
 
 
 ## Cluster Installation
-When `openshift-install` is run with standard configuration the OpenShift cluster will be installed `without` STS being enabled. The cluster has zero intergation with the AWS infrastructure. The cluster can't be retrofitted after installation to enable STS. Additional steps are required to generate the specific manifests for installation coupled with the Cloud Credential Operator CLI utility to create the Cloud Front origin and s3 bucket for the OICD to work as expetced with the aws STS service. 
+When `openshift-install` is run with standard configuration the OpenShift cluster will be installed `without` STS being enabled. The cluster has zero intergation with the AWS infrastructure. The cluster can't be retrofitted after installation to enable STS. 
+
+When building an STS enabled OpenShift cluster on aws additional steps are required to generate the specific manifests for installation coupled with the Cloud Credential Operator CLI utility to create the Cloud Front origin and s3 bucket for the OICD to work as expetced with the aws STS service. 
 
 ### Generate ssh-key
 ```
