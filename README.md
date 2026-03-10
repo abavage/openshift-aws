@@ -145,7 +145,7 @@ $ aws sts get-caller-identity
 ```
 
 ### Cluster Name
-The cluster_name in install-config.yaml `installconfig.spec.metadata.name` and the name used for the `ccoctl --name` option must be identical.
+The cluster_name in install-config.yaml `installconfig.spec.metadata.name` and the name used for the `ccoctl --name` option **must be identical**.
 
 ### Create install-config.yaml
 Review the available options.
