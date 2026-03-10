@@ -148,6 +148,16 @@ $ aws sts get-caller-identity
 The cluster_name in install-config.yaml `installconfig.spec.metadata.name` and the name used for the `ccoctl --name` option must be identical.
 
 ### Create install-config.yaml
+Review the available options.
+
+`Note`: Not all options are displayed in the explain.  
+```
+$ openshift-install explain installconfig
+```
+See: [openshift-installer](https://github.com/openshift/installer/blob/main/docs/user/aws/customization.md)
+
+Validated ec2 Instances: [x86_64](https://github.com/openshift/installer/blob/main/docs/user/aws/tested_instance_types_x86_64.md)
+
 ```
 $ mkdir cluster-install && cd cluster-install
 $ mkdir sts-config
@@ -168,6 +178,11 @@ compute:
   platform:
     aws:
       type: m5.xlarge
+      rootVolume:
+        iops: 5000
+        size: 150
+        type: io2
+        kmsKeyARN: arn:aws:kms:ap-southeast-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
       zones:
       - ap-southeast-2a
       - ap-southeast-2b
