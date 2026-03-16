@@ -243,8 +243,10 @@ sshKey: <ssh_public_key>
 The cluster install version will be `4.20.4` meaning the [openshift-install](https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.20.4/openshift-install-linux-4.20.4.tar.gz) version needs to match.
 
 ```
-$ oc adm release extract --credentials-requests --cloud=aws --to=./sts-config quay.io/openshift-release-dev/ocp-release:4.20.4-x86_64
-$ oc adm release extract --install-config=./install-config.yaml --included --credentials-requests --cloud=aws --to=./sts-config quay.io/openshift-release-dev/ocp-release:4.20.4-x86_64
+#$ oc adm release extract --credentials-requests --cloud=aws --to=./sts-config quay.io/openshift-release-dev/ocp-release:4.20.4-x86_64
+#$ oc adm release extract --install-config=./install-config.yaml --included --credentials-requests --cloud=aws --to=./sts-config quay.io/openshift-release-dev/ocp-release:4.20.4-x86_64
+
+$ oc adm release extract -a ./pull-secret.txt --install-config=./install-config.yaml --included --credentials-requests --cloud=aws --to=./sts-config quay.io/openshift-release-dev/ocp-release:4.20.4-x86_64
 
 ```
 
