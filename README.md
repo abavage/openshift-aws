@@ -43,10 +43,12 @@ Regardless of the exposure type, all nodes reside in private subnets. Access is 
    * sts.`<region>`.amazonaws.com
    * ec2.`<region>`.amazonaws.com
    * elasticloadbalancing.`<region>`.amazonaws.com
-   * route53.amazonaws.com
    * tagging.`<region>`.amazonaws.com
    * servicequotas.`<region>`.amazonaws.com
-* Public access to
+* Cross region
+  * iam.amazonaws.com
+  * route53.amazonaws.com
+* Public access (via proxy or managed nat)
   * tagging.us-east-1.amazonaws.com
   * aws.amazon.com
 
