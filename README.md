@@ -43,6 +43,12 @@ Regardless of the exposure type, all nodes reside in private subnets. Access is 
    * sts.`<region>`.amazonaws.com
    * ec2.`<region>`.amazonaws.com
    * elasticloadbalancing.`<region>`.amazonaws.com
+   * route53.amazonaws.com
+   * tagging.`<region>`.amazonaws.com
+   * servicequotas.`<region>`.amazonaws.com
+* Public access to
+  * tagging.us-east-1.amazonaws.com
+  * aws.amazon.com
 
 ### Route53
 A single Route53 hosted zone is required to act as the base domain for the cluster. The hosted zone can either be Public or Private. 
@@ -214,6 +220,7 @@ networking:
 platform:
   aws:
     region: ap-southeast-2
+    propagateUserTags: true
     lbType: NLB
     vpc:
       subnets:
