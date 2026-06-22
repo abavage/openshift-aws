@@ -174,7 +174,7 @@ $ mkdir installation_dir
 $ cp install-config.yaml installation_dir
 ```
 
-```
+```yaml
 # install-config.yaml
 apiVersion: v1
 additionalTrustBundlePolicy: Proxyonly
@@ -242,7 +242,7 @@ sshKey: <ssh_public_key>
 ### Generate manifests - Part 1
 The cluster install version will be `4.20.4` meaning the [openshift-install](https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.20.4/openshift-install-linux-4.20.4.tar.gz) version needs to match.
 
-```
+```bash
 #$ oc adm release extract --credentials-requests --cloud=aws --to=./sts-config quay.io/openshift-release-dev/ocp-release:4.20.4-x86_64
 #$ oc adm release extract --install-config=./install-config.yaml --included --credentials-requests --cloud=aws --to=./sts-config quay.io/openshift-release-dev/ocp-release:4.20.4-x86_64
 
@@ -251,21 +251,21 @@ $ oc adm release extract -a ./pull-secret.txt --install-config=./install-config.
 ```
 
 ### Create the CloudFront Origin and s3 Bucket
-```
+```bash
 $ ccoctl aws create-all --name=one --region=ap-southeast-2 --output-dir=cco-config --create-private-s3-bucket --credentials-requests-dir=./sts-config
 
 ```
 
 ### Generate manifests - Part 2
 install-config.yaml is consumed/deleted at this stage
-```
+```bash
 $ openshift-install create manifests --dir=./installation_dir
 $ cp cco-config/manifests/* ./installation_dir/manifests/
 $ cp -r cco-config/tls ./installation_dir/
 ```
 
 ### Start the Cluster Build
-```
+```bash
 $ openshift-install create cluster --dir=./installation_dir --log-level=info
 ```
 
@@ -277,7 +277,7 @@ Items to review
 
 ### Login
 
-```
+```bash
 $ oc login <url> -u kubeadmin -p <password>
 $ oc get cm cluster-config-v1 -o yaml -n kube-system
 
@@ -290,7 +290,7 @@ $ oc get pods -A
 ```
 
 ## Destroy the Cluster 
-```
+```bash
 $ openshift-install destroy cluster --dir=./installation_dir --log-level=info
 ```
 
@@ -298,6 +298,41 @@ $ openshift-install destroy cluster --dir=./installation_dir --log-level=info
 ```
 $ ccoctl aws delete --name=one --region=ap-southeast-2
 ```
+
+## Route53 DNS Delegation & Second IngressController
+
+### Route53 DNS Delegation Setup
+This example the top level domain is not in the AWS account where the cluster is installed.
+
+The intention is to add a secondary ingressController to the cluster. Route53 DNS delgation needs to be setup first between the AWS account holding the top level domain and AWS account where the cluster is installed.
+
+* AWS account A will host the sub domain 
+* AWS account B will host the top level domain
+
+The top level domain is `sierra-espresso.net` in AWS account B
+
+The sub-domain is `apps.sierra-espresso.net` in AWS account A.
+
+
+`AWS Account A`
+
+1. Navigate to Route53 in the AWS console
+2. Create a new `Public` hosted zone in route53 named `apps.sierra-espresso.net` 
+3. Take note of the NS record and the four (4) AWS name servers configured
+
+`AWS Account B`
+
+1. Navigate to Route53 in the AWS console
+2. Select the exising hosted zone `sierra-espresso.net`
+3. Add a new NS record as `apps.sierra-espresso.net` and supply the above four (4) DNS servers to the record.
+
+Steps
+Create the ingresscontroller
+get the svc / nlb address
+create the wildcard records in accountB at `*.apps.sierra-espresso.net` adding as an AWS A recrords direct to the the NLB 
+
+test it all out eg `nslookup jjj.apps.sierra-espresso.net`
+
 
 
 
